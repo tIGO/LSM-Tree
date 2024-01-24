@@ -3,7 +3,10 @@ package com.tomfran.lsm.io;
 import com.tomfran.lsm.types.ByteArrayPair;
 import it.unimi.dsi.fastutil.io.FastBufferedOutputStream;
 
+import java.io.FileDescriptor;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.SyncFailedException;
 
 /**
  * This class use a FastBufferedOutputStream as a base and adds
@@ -13,6 +16,7 @@ public class ExtendedOutputStream {
 
     private static final byte[] VBYTE_BUFFER = new byte[10];
     private final FastBufferedOutputStream fos;
+    private final FileDescriptor fd;
 
     /**
      * Initialize an output stream on a file.
@@ -21,11 +25,21 @@ public class ExtendedOutputStream {
      */
     public ExtendedOutputStream(String filename) {
         try {
-            fos = new FastBufferedOutputStream(new FileOutputStream(filename));
+            var os = new FileOutputStream(filename);
+            fd = os.getFD();
+            fos = new FastBufferedOutputStream(os);
             fos.position(0);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void flush() throws IOException {
+        fos.flush();
+    }
+
+    public void fsync() throws IOException {
+        fd.sync();
     }
 
     /**

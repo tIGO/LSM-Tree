@@ -3,6 +3,7 @@ package com.tomfran.lsm.io;
 import com.tomfran.lsm.types.ByteArrayPair;
 import it.unimi.dsi.fastutil.io.FastBufferedInputStream;
 
+import java.io.EOFException;
 import java.io.FileInputStream;
 import java.io.IOException;
 
@@ -73,7 +74,11 @@ public class ExtendedInputStream {
     public long readLong() {
         try {
             long result = 0;
-            for (byte b : fis.readNBytes(8)) {
+            var bytes = fis.readNBytes(8);
+            if (bytes.length == 0) {
+                throw new EOFException();
+            }
+            for (byte b : bytes) {
                 result <<= 8;
                 result |= (b & 0xFF);
             }
@@ -90,7 +95,11 @@ public class ExtendedInputStream {
      */
     public int readByteInt() {
         try {
-            return fis.read();
+            var b = fis.read();
+            if (b == -1) {
+                throw new EOFException();
+            }
+            return b;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
